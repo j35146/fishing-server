@@ -1,6 +1,6 @@
 FROM node:22-alpine
 
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl ffmpeg
 
 WORKDIR /app
 

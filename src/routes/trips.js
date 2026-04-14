@@ -1,5 +1,6 @@
 const db = require('../db');
 const authenticate = require('../middleware/auth');
+const { getPresignedUrl } = require('../utils/minio');
 
 // 创建出行 schema
 const createTripSchema = {
@@ -191,10 +192,20 @@ async function tripRoutes(fastify) {
       [id]
     );
 
+    // 将 media_keys 转换为预签名 URL
+    let mediaUrls = [];
+    const mediaKeys = trip.media_keys || [];
+    if (mediaKeys.length > 0) {
+      mediaUrls = await Promise.all(
+        mediaKeys.map((key) => getPresignedUrl(key))
+      );
+    }
+
     return {
       success: true,
       data: {
         ...trip,
+        media_urls: mediaUrls,
         styles: stylesResult.rows,
         catches: catchesResult.rows,
         equipment: equipmentResult.rows,

@@ -195,6 +195,83 @@ if [ -n "$TRIP_ID" ]; then
   curl -s -X DELETE "$BASE_URL/api/v1/trips/$TRIP_ID" -H "$AUTH_HEADER" > /dev/null
 fi
 
+# ─── Phase 2：媒体 ───────────────────────────────────
+section "模块：媒体上传"
+
+# R51 presign 端点
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "$AUTH_HEADER" \
+  "$BASE_URL/api/v1/media/presign/test-key")
+[ "$STATUS" = "200" ] && pass "GET /media/presign/:key → 返回预签名 URL" || fail "GET /media/presign/:key → 期望 200，实际 $STATUS"
+
+# R58 转码查询（不存在的 jobId 返回 404）
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "$AUTH_HEADER" \
+  "$BASE_URL/api/v1/media/transcode/nonexistent-id")
+[ "$STATUS" = "404" ] && pass "GET /media/transcode/:jobId 不存在 → 404" || fail "GET /media/transcode/:jobId → 期望 404，实际 $STATUS"
+
+# ─── Phase 2：钓点 ───────────────────────────────────
+section "模块：钓点管理"
+
+# R64 创建钓点
+SPOT_RESP=$(curl -s -X POST "$BASE_URL/api/v1/spots" \
+  -H "Content-Type: application/json" \
+  -H "$AUTH_HEADER" \
+  -d '{"name":"测试钓点","latitude":31.2304,"longitude":121.4737,"spot_type":"river","is_public":false}')
+SPOT_SUCCESS=$(echo "$SPOT_RESP" | grep -o '"success":true')
+SPOT_ID=$(echo "$SPOT_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('data',{}).get('id',''))" 2>/dev/null)
+[ -n "$SPOT_SUCCESS" ] && [ -n "$SPOT_ID" ] && pass "POST /spots → 创建成功" || fail "POST /spots → 失败（响应：$SPOT_RESP）"
+
+if [ -n "$SPOT_ID" ]; then
+  # R66 钓点详情
+  STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/api/v1/spots/$SPOT_ID" -H "$AUTH_HEADER")
+  [ "$STATUS" = "200" ] && pass "GET /spots/:id → 返回详情" || fail "GET /spots/:id → 期望 200，实际 $STATUS"
+
+  # R67 更新钓点
+  RESP=$(curl -s -X PUT "$BASE_URL/api/v1/spots/$SPOT_ID" \
+    -H "Content-Type: application/json" \
+    -H "$AUTH_HEADER" \
+    -d '{"name":"已更新钓点"}')
+  SUCCESS=$(echo "$RESP" | grep -o '"success":true')
+  [ -n "$SUCCESS" ] && pass "PUT /spots/:id → 更新成功" || fail "PUT /spots/:id → 失败"
+fi
+
+# R65 钓点列表
+RESP=$(curl -s "$BASE_URL/api/v1/spots" -H "$AUTH_HEADER")
+SUCCESS=$(echo "$RESP" | grep -o '"success":true')
+[ -n "$SUCCESS" ] && pass "GET /spots → 返回列表" || fail "GET /spots → 失败"
+
+# R69 附近钓点
+RESP=$(curl -s "$BASE_URL/api/v1/spots/nearby?lat=31.23&lng=121.47&radius=10" -H "$AUTH_HEADER")
+SUCCESS=$(echo "$RESP" | grep -o '"success":true')
+[ -n "$SUCCESS" ] && pass "GET /spots/nearby → 返回附近钓点" || fail "GET /spots/nearby → 失败"
+
+# 清理测试钓点
+if [ -n "$SPOT_ID" ]; then
+  curl -s -X DELETE "$BASE_URL/api/v1/spots/$SPOT_ID" -H "$AUTH_HEADER" > /dev/null
+fi
+
+# ─── Phase 2：统计 ───────────────────────────────────
+section "模块：统计数据"
+
+# R70 overview
+RESP=$(curl -s "$BASE_URL/api/v1/stats/overview" -H "$AUTH_HEADER")
+SUCCESS=$(echo "$RESP" | grep -o '"success":true')
+[ -n "$SUCCESS" ] && pass "GET /stats/overview → 返回统计总览" || fail "GET /stats/overview → 失败"
+
+# R71 seasonal
+RESP=$(curl -s "$BASE_URL/api/v1/stats/seasonal" -H "$AUTH_HEADER")
+SUCCESS=$(echo "$RESP" | grep -o '"success":true')
+[ -n "$SUCCESS" ] && pass "GET /stats/seasonal → 返回月度统计" || fail "GET /stats/seasonal → 失败"
+
+# R72 species
+RESP=$(curl -s "$BASE_URL/api/v1/stats/species" -H "$AUTH_HEADER")
+SUCCESS=$(echo "$RESP" | grep -o '"success":true')
+[ -n "$SUCCESS" ] && pass "GET /stats/species → 返回鱼种分布" || fail "GET /stats/species → 失败"
+
+# R73 top-catches
+RESP=$(curl -s "$BASE_URL/api/v1/stats/top-catches" -H "$AUTH_HEADER")
+SUCCESS=$(echo "$RESP" | grep -o '"success":true')
+[ -n "$SUCCESS" ] && pass "GET /stats/top-catches → 返回最大渔获" || fail "GET /stats/top-catches → 失败"
+
 # ─── 结果汇总 ─────────────────────────────────────────
 echo -e "\n${YELLOW}━━━ 验证结果 ━━━${NC}"
 echo -e "${GREEN}通过：$PASS 项${NC}"

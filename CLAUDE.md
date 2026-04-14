@@ -80,10 +80,12 @@ docker compose exec postgres psql -U fishing -d fishing
 
 ## 当前阶段
 
-**Phase 1**：后端基础框架
+**Phase 2**：媒体上传 + 视频转码 + 钓点 + 统计
 
-范围内：Docker 环境、数据库建表、用户认证、出行/渔获/装备 CRUD  
-范围外：媒体上传、钓点、统计、分享、导出
+范围内：照片/视频上传（MinIO）、FFmpeg HLS 转码、钓点 CRUD + 附近搜索、统计 API  
+范围外：分享、导出、推送通知
+
+**Phase 1 已完成**（R01–R44 全部 ✓）：Docker 环境、数据库建表、用户认证、出行/渔获/装备 CRUD
 
 ## 工作流程（必须遵守）
 

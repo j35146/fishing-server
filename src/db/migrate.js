@@ -127,6 +127,29 @@ async function migrate() {
     );
   `);
 
+  // Phase 2：媒体字段
+  await db.query(`ALTER TABLE fishing_trips ADD COLUMN IF NOT EXISTS media_keys JSONB DEFAULT '[]'`);
+  await db.query(`ALTER TABLE fish_catches ADD COLUMN IF NOT EXISTS media_keys JSONB DEFAULT '[]'`);
+  await db.query(`ALTER TABLE equipment_library ADD COLUMN IF NOT EXISTS photo_key VARCHAR(500)`);
+
+  // Phase 2：钓点表
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS spots (
+      id SERIAL PRIMARY KEY,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name VARCHAR(200) NOT NULL,
+      description TEXT,
+      latitude DECIMAL(10,8) NOT NULL,
+      longitude DECIMAL(11,8) NOT NULL,
+      spot_type VARCHAR(20) NOT NULL DEFAULT 'other'
+        CHECK (spot_type IN ('river','lake','reservoir','sea','other')),
+      is_public BOOLEAN NOT NULL DEFAULT false,
+      photo_key VARCHAR(500),
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
   console.log('数据库迁移完成');
 }
 
