@@ -1,0 +1,21 @@
+{
+  "name": "fishing-server",
+  "version": "1.0.0",
+  "description": "钓鱼志后端 API 服务",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "fastify": "^4",
+    "@fastify/jwt": "^8",
+    "@fastify/formbody": "^7",
+    "pg": "^8",
+    "ioredis": "^5",
+    "bcrypt": "^5",
+    "minio": "^7",
+    "dotenv": "^16",
+    "uuid": "^9"
+  }
+}
