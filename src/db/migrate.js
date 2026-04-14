@@ -86,16 +86,33 @@ async function migrate() {
     CREATE TABLE IF NOT EXISTS equipment_categories (
       id         SERIAL PRIMARY KEY,
       name       VARCHAR(50) NOT NULL,
+      group_code VARCHAR(20) NOT NULL DEFAULT 'traditional',
       sort_order INTEGER DEFAULT 0
     );
   `);
-  // 幂等插入预设分类
+  // 兼容旧表：如果 group_code 列不存在则添加
   await db.query(`
     DO $$ BEGIN
-      IF NOT EXISTS (SELECT 1 FROM equipment_categories) THEN
-        INSERT INTO equipment_categories (name, sort_order) VALUES
-          ('鱼竿',1),('鱼轮',2),('鱼线',3),('鱼钩',4),
-          ('鱼饵',5),('浮漂',6),('铅坠',7),('配件',8),('其他',9);
+      IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'equipment_categories' AND column_name = 'group_code'
+      ) THEN
+        ALTER TABLE equipment_categories ADD COLUMN group_code VARCHAR(20) NOT NULL DEFAULT 'traditional';
+      END IF;
+    END $$;
+  `);
+  // 重新灌入分类数据（台钓 + 路亚两个大类）
+  await db.query(`
+    DO $$ BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM equipment_categories WHERE group_code IN ('traditional','lure')
+        HAVING COUNT(DISTINCT group_code) = 2
+      ) THEN
+        DELETE FROM equipment_categories;
+        INSERT INTO equipment_categories (name, group_code, sort_order) VALUES
+          ('鱼竿','traditional',1),('浮漂','traditional',2),('钓台','traditional',3),
+          ('钓箱','traditional',4),('钓椅','traditional',5),
+          ('鱼竿','lure',1),('渔轮','lure',2),('钓箱','lure',3),('路亚包','lure',4);
       END IF;
     END $$;
   `);
