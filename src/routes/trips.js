@@ -21,6 +21,8 @@ const createTripSchema = {
       notes: { type: 'string' },
       style_ids: { type: 'array', items: { type: 'integer' } },
       local_id: { type: 'string' },
+      latitude: { type: 'number' },
+      longitude: { type: 'number' },
     },
   },
 };
@@ -42,6 +44,8 @@ const updateTripSchema = {
       companions: { type: 'array', items: { type: 'string' } },
       notes: { type: 'string' },
       style_ids: { type: 'array', items: { type: 'integer' } },
+      latitude: { type: 'number' },
+      longitude: { type: 'number' },
     },
   },
 };
@@ -70,6 +74,8 @@ const syncSchema = {
             notes: { type: 'string' },
             style_ids: { type: 'array', items: { type: 'integer' } },
             local_id: { type: 'string' },
+            latitude: { type: 'number' },
+            longitude: { type: 'number' },
           },
         },
       },
@@ -134,7 +140,7 @@ async function tripRoutes(fastify) {
     // 查询列表
     const listParams = [...params, pageSize, offset];
     const listResult = await db.query(
-      `SELECT t.id, t.title, t.trip_date, t.location_name, t.created_at,
+      `SELECT t.id, t.local_id, t.title, t.trip_date, t.location_name, t.latitude, t.longitude, t.created_at,
               COALESCE(
                 (SELECT json_agg(json_build_object('id', fs.id, 'name', fs.name, 'code', fs.code))
                  FROM trip_fishing_styles tfs
@@ -302,7 +308,7 @@ async function tripRoutes(fastify) {
       const {
         title, trip_date, start_time, end_time, location_name,
         weather_temp, weather_wind, weather_condition, companions, notes,
-        style_ids, local_id,
+        style_ids, local_id, latitude, longitude,
       } = trip;
 
       // 检查 local_id 是否已存在
@@ -326,11 +332,14 @@ async function tripRoutes(fastify) {
             weather_condition = COALESCE($8, weather_condition),
             companions = COALESCE($9, companions),
             notes = COALESCE($10, notes),
+            latitude = COALESCE($11, latitude),
+            longitude = COALESCE($12, longitude),
             sync_status = 'synced',
             updated_at = NOW()
-           WHERE id = $11`,
+           WHERE id = $13`,
           [title, trip_date, start_time, end_time, location_name,
-           weather_temp, weather_wind, weather_condition, companions, notes, tripId]
+           weather_temp, weather_wind, weather_condition, companions, notes,
+           latitude || null, longitude || null, tripId]
         );
         if (style_ids) {
           await db.query('DELETE FROM trip_fishing_styles WHERE trip_id = $1', [tripId]);
@@ -342,12 +351,14 @@ async function tripRoutes(fastify) {
         const result = await db.query(
           `INSERT INTO fishing_trips
             (title, trip_date, start_time, end_time, location_name,
-             weather_temp, weather_wind, weather_condition, companions, notes, local_id, sync_status)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'synced')
+             weather_temp, weather_wind, weather_condition, companions, notes, local_id,
+             latitude, longitude, sync_status)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'synced')
            RETURNING id`,
           [title, trip_date, start_time || null, end_time || null, location_name || null,
            weather_temp || null, weather_wind || null, weather_condition || null,
-           companions || null, notes || null, local_id || null]
+           companions || null, notes || null, local_id || null,
+           latitude || null, longitude || null]
         );
         const newId = result.rows[0].id;
         await insertTripStyles(newId, style_ids);

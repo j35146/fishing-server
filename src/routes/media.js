@@ -103,6 +103,31 @@ async function mediaRoutes(fastify) {
     return { success: true, data: { url } };
   });
 
+  // GET /api/v1/media/file/:key — 直接返回文件流（通过 API 代理，无需预签名）
+  fastify.get('/api/v1/media/file/*', async (request, reply) => {
+    const key = request.params['*'];
+    try {
+      const { GetObjectCommand } = require('@aws-sdk/client-s3');
+      const config = require('../config');
+      const { S3Client } = require('@aws-sdk/client-s3');
+      const s3 = new S3Client({
+        endpoint: `http://${config.minio.endPoint}:${config.minio.port}`,
+        region: 'us-east-1',
+        credentials: { accessKeyId: config.minio.accessKey, secretAccessKey: config.minio.secretKey },
+        forcePathStyle: true,
+      });
+      const resp = await s3.send(new GetObjectCommand({
+        Bucket: config.minio.bucket,
+        Key: key,
+      }));
+      reply.header('Content-Type', resp.ContentType || 'image/jpeg');
+      reply.header('Cache-Control', 'public, max-age=86400');
+      return reply.send(resp.Body);
+    } catch (e) {
+      return reply.code(404).send({ success: false, error: '文件不存在' });
+    }
+  });
+
   // DELETE /api/v1/media/:key — 删除媒体文件
   fastify.delete('/api/v1/media/*', async (request) => {
     const key = request.params['*'];

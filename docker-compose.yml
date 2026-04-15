@@ -60,7 +60,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - ./data/minio:/data
+      - minio-data:/data
     networks:
       - fishing-net
     restart: unless-stopped
@@ -76,6 +76,9 @@ services:
     networks:
       - fishing-net
     restart: unless-stopped
+
+volumes:
+  minio-data:
 
 networks:
   fishing-net:
