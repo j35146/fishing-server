@@ -16,7 +16,7 @@
 | 框架 | Fastify |
 | 数据库 | PostgreSQL 16 + PostGIS |
 | 缓存 | Redis 7 |
-| 对象存储 | MinIO（Docker named volume，非 bind mount） |
+| 对象存储 | MinIO（生产挂载 NAS `/mnt/nas/fishing`；开发用 Docker named volume） |
 | 部署 | Docker Compose |
 | 认证 | JWT（3650 天有效期，约 10 年） |
 | 反向代理 | Nginx（client_max_body_size 500M） |
@@ -173,7 +173,7 @@ docker compose exec postgres psql -U fishing -d fishing -c "\d fishing_trips"
 | API | http://home.weixia.org:35146 |
 | SSH | `ssh -p 11122 thomas@home.weixia.org` |
 | 代码位置 | /opt/fishing-server/ |
-| MinIO | Docker named volume `fishing-server_minio-data` |
+| MinIO | 生产挂载 NAS `/mnt/nas/fishing`；开发用 named volume |
 
 ### 生产环境 .env 关键配置
 ```
