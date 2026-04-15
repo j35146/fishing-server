@@ -37,6 +37,7 @@ module.exports = {
     accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
     secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
     bucket: process.env.MINIO_BUCKET || 'fishing-media',
+    publicEndPoint: process.env.MINIO_PUBLIC_ENDPOINT || null,
     useSSL: false,
   },
 };
