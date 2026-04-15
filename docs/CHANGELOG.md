@@ -123,6 +123,16 @@
 - `VideoPlayerView.swift` — 左上角分享按钮，下载视频到临时文件后分享
 - `ShareSheet` — UIActivityViewController 包装（共用组件）
 
+### 装备库优化
+- `EquipmentModel.swift` — 新增 `styleTag` 属性（大写，匹配数据库 style_tags）
+- `EquipmentAPI.swift` — fetchEquipment 增加 styleTag 参数
+- `GearListViewModel.swift` — 按大类（台钓/路亚）筛选装备，修复"全部"显示所有装备的 bug
+- `EquipmentDetailView.swift` — 新建装备详情页（名称、品牌、型号、购入日期/价格、备注、编辑入口）
+- `GearListView.swift` — 卡片包 NavigationLink，点击进入详情页
+- 购入日期仅显示日期（支持 ISO8601/yyyy-MM-dd 多格式解析）
+- 生产数据库：删除浮漂(id=2)和路亚包(id=9)分类，台钓/路亚各新增"其它"分类
+- 生产数据库：批量导入 33 条装备数据（CSV → SQL）
+
 ### 其他改动
 - `Step2CatchesView.swift` — 渔获数量从 Stepper 改为手动输入
 - `project.yml` — `platform: iOS` → `supportedDestinations: [iOS]`（兼容 Xcode 26）

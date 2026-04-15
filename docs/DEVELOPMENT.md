@@ -134,6 +134,7 @@ CoreData (本地)  ←→  REST API (远端)
 | 修改媒体上传 | `src/routes/media.js` |
 | 修改钓点 API | `src/routes/spots.js` |
 | 修改装备 API | `src/routes/equipment.js` |
+| 修改装备分类 | 直接操作生产数据库 `equipment_categories` 表 |
 | 修改统计 API | `src/routes/stats.js` |
 | 修改数据库表结构 | `src/db/migrate.js` |
 | 修改 MinIO 配置 | `src/utils/minio.js` + `.env` |
