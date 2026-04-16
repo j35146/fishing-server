@@ -133,6 +133,21 @@
 - 生产数据库：删除浮漂(id=2)和路亚包(id=9)分类，台钓/路亚各新增"其它"分类
 - 生产数据库：批量导入 33 条装备数据（CSV → SQL）
 
+### 出行编辑功能
+- `EditTripView.swift` — 新建单页编辑表单（日期/钓法/地点/天气/同行人/备注）
+- `EditTripView` 集成渔获管理（查看/编辑/删除/添加，含 EditCatchSheet）
+- `EditTripView` 集成媒体管理（查看已有/删除/拍照/录像/相册添加）
+- `TripDetailView.swift` — 右上角菜单增加"编辑出行"入口
+
+### 列表刷新 + 渔获计数修复
+- `TripCardView.swift` — `let trip` 改为 `@ObservedObject var trip`，属性变更自动重绘
+- `TripCardView.swift` — 渔获尾数从记录条数改为 reduce 累加 count 总和
+- `TripsListView.swift` — 监听 `.NSManagedObjectContextDidSave` 通知自动刷新列表
+
+### 装备库 Bug 修复
+- `NewEquipmentView.swift` / `EditEquipmentView.swift` — styleTags 从 nil 改为 `[selectedGroup.styleTag]`
+- `GearCardView.swift` — `.alert` 从卡片移到 `GearListView` 层级，修复 NavigationLink 内弹窗一闪而过
+
 ### 其他改动
 - `Step2CatchesView.swift` — 渔获数量从 Stepper 改为手动输入
 - `project.yml` — `platform: iOS` → `supportedDestinations: [iOS]`（兼容 Xcode 26）
